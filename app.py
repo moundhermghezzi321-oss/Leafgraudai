@@ -675,6 +675,11 @@ def expert_reply(message_id):
     flash("Reply sent.")
     return redirect(url_for("expert_dashboard"))
 
-
 if __name__ == "__main__":
-    app.run(debug=True)
+
+    port = int(os.environ.get("PORT", 5000))
+
+    app.run(
+        host="0.0.0.0",
+        port=port
+    )
