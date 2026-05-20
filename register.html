@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Login - LeafGuard AI{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="brand">🌿 LeafGuard AI</div>
+        <h1>{{ t.login }}</h1>
+
+        <div class="lang-switch">
+            <a href="{{ url_for('set_language', lang='en') }}">EN</a>
+            <a href="{{ url_for('set_language', lang='fr') }}">FR</a>
+            <a href="{{ url_for('set_language', lang='ar') }}">AR</a>
+        </div>
+
+        <form method="POST">
+            <input type="email" name="email" placeholder="{{ t.email }}" required>
+            <input type="password" name="password" placeholder="{{ t.password }}" required>
+            <button type="submit">{{ t.login }}</button>
+        </form>
+
+        <p>
+            <a href="{{ url_for('register') }}">{{ t.register }}</a>
+        </p>
+
+        <small>Admin: admin@leafguard.com / admin12345</small>
+    </div>
+</div>
+{% endblock %}

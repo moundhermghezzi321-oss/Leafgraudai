@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Farmer Dashboard{% endblock %}
+
+{% block content %}
+<div class="layout">
+    <aside>
+        <h2>🌿 LeafGuard</h2>
+        <span class="badge">{{ t.farmer_panel }}</span>
+        <a href="{{ url_for('farmer_dashboard') }}">{{ t.dashboard }}</a>
+        <a href="#history">{{ t.history }}</a>
+        <a href="{{ url_for('logout') }}">{{ t.logout }}</a>
+
+        <div class="side-lang">
+            <b>{{ t.language }}</b>
+            <a href="{{ url_for('set_language', lang='en') }}">English</a>
+            <a href="{{ url_for('set_language', lang='fr') }}">Français</a>
+            <a href="{{ url_for('set_language', lang='ar') }}">العربية</a>
+        </div>
+    </aside>
+
+    <main>
+        <header class="topbar">
+            <div>
+                <h1>{{ t.welcome }}, {{ user.name }}</h1>
+                <p>Smart grape leaf disease detection</p>
+            </div>
+        </header>
+
+        <section class="grid two">
+            <div class="card">
+                <h2>{{ t.analyze }}</h2>
+
+                <div class="upload-row">
+                    <label class="file-btn">
+                        {{ t.choose_image }}
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                    </label>
+                    <button type="button" onclick="openCamera()">{{ t.camera }}</button>
+                </div>
+
+                <div id="cameraBox" class="camera-box">
+                    <video id="video" autoplay playsinline></video>
+                    <button type="button" onclick="captureImage()">Capture</button>
+                </div>
+
+                <canvas id="canvas" hidden></canvas>
+                <img id="preview" class="preview" style="display:none;">
+
+                <button class="main-btn" onclick="analyzeImage()">{{ t.analyze }}</button>
+            </div>
+
+            <div class="card result-card">
+                <h2>{{ t.result }}</h2>
+                <h3 id="disease">{{ t.no_data }}</h3>
+                <p id="confidence"></p>
+                <p><b>{{ t.details }}:</b> <span id="details">-</span></p>
+                <p><b>{{ t.advice }}:</b> <span id="advice">-</span></p>
+                <p><b>{{ t.treatment }}:</b> <span id="treatment">-</span></p>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>{{ t.contact_expert }}</h2>
+            <input type="hidden" id="historyId">
+            <input type="text" id="msgDisease" placeholder="Disease">
+            <textarea id="expertMessage" placeholder="{{ t.message }}"></textarea>
+            <button onclick="sendExpertMessage()">{{ t.send }}</button>
+        </section>
+
+        <section class="card">
+            <h2>{{ t.expert_replies }}</h2>
+            {% for msg in messages %}
+                <div class="box">
+                    <b>{{ msg.disease }}</b>
+                    <p>{{ msg.message }}</p>
+                    <small>{{ t.status }}: {{ msg.status }}</small>
+                    {% if msg.reply %}
+                        <p class="reply"><b>{{ t.reply }}:</b> {{ msg.reply }}</p>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>{{ t.no_data }}</p>
+            {% endfor %}
+        </section>
+
+        <section class="card" id="history">
+            <h2>{{ t.history }}</h2>
+            <div class="history-grid">
+                {% for item in history %}
+                    <div class="box">
+                        {% if item.image_path %}
+                            <img src="{{ url_for('static', filename=item.image_path) }}" class="thumb">
+                        {% endif %}
+                        <b>{{ item.disease }}</b>
+                        <p>{{ t.confidence }}: {{ item.confidence }}%</p>
+                        <small>{{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    </div>
+                {% else %}
+                    <p>{{ t.no_data }}</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

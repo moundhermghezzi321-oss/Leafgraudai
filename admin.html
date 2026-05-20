@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Expert Dashboard{% endblock %}
+
+{% block content %}
+<div class="layout">
+    <aside class="expert-side">
+        <h2>🩺 LeafGuard</h2>
+        <span class="badge blue">{{ t.expert_panel }}</span>
+        <a href="{{ url_for('expert_dashboard') }}">{{ t.dashboard }}</a>
+        <a href="{{ url_for('logout') }}">{{ t.logout }}</a>
+
+        <div class="side-lang">
+            <b>{{ t.language }}</b>
+            <a href="{{ url_for('set_language', lang='en') }}">English</a>
+            <a href="{{ url_for('set_language', lang='fr') }}">Français</a>
+            <a href="{{ url_for('set_language', lang='ar') }}">العربية</a>
+        </div>
+    </aside>
+
+    <main>
+        <h1>{{ t.expert_panel }}</h1>
+
+        <div class="stats">
+            <div>{{ t.pending }}: {{ pending_count }}</div>
+            <div>{{ t.answered }}: {{ answered_count }}</div>
+        </div>
+
+        {% for msg in messages %}
+            <div class="card case-card">
+                <div>
+                    <h2>{{ msg.disease }}</h2>
+                    <p><b>Farmer:</b> {{ msg.farmer.name }} | {{ msg.farmer.email }}</p>
+                    <p><b>{{ t.message }}:</b> {{ msg.message }}</p>
+                    <p><b>{{ t.status }}:</b> {{ msg.status }}</p>
+
+                    {% if msg.reply %}
+                        <p class="reply"><b>{{ t.reply }}:</b> {{ msg.reply }}</p>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('expert_reply', message_id=msg.id) }}">
+                            <textarea name="reply" placeholder="{{ t.reply }}" required></textarea>
+                            <button type="submit">{{ t.send }}</button>
+                        </form>
+                    {% endif %}
+                </div>
+
+                {% if msg.image_path %}
+                    <img src="{{ url_for('static', filename=msg.image_path) }}" class="case-img">
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="card"><p>{{ t.no_data }}</p></div>
+        {% endfor %}
+    </main>
+</div>
+{% endblock %}
