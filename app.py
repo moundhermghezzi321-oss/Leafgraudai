@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 
 try:
-    import torch
+    import torch 
     import torchvision.transforms as transforms
 except Exception as e:
     print("Torch import error:", e)
