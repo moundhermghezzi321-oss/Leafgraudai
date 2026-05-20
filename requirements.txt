@@ -2,10 +2,12 @@ flask
 flask_sqlalchemy
 werkzeug
 gunicorn
-
+gdown
 torch
 torchvision
 timm
 numpy
 pillow
 opencv-python-headless
+torch
+torchvision
