@@ -113,12 +113,28 @@ def load_model():
             url = f"https://drive.google.com/uc?id={GOOGLE_DRIVE_FILE_ID}"
             print("Downloading model from Google Drive...")
             gdown.download(url, MODEL_PATH, quiet=False)
+
         except Exception as e:
             print("Model download failed:", e)
 
     if os.path.exists(MODEL_PATH):
+
         try:
-            model = torch.jit.load(MODEL_PATH, map_location="cpu")
+            import timm
+
+            model = timm.create_model(
+                "efficientnet_b0",
+                pretrained=False,
+                num_classes=7
+            )
+
+            model.load_state_dict(
+                torch.load(
+                    MODEL_PATH,
+                    map_location="cpu"
+                )
+            )
+
             model.eval()
 
             transform = transforms.Compose([
@@ -137,7 +153,9 @@ def load_model():
             model = None
 
     else:
-        print("Model file not found. Running in demo mode.")
+        print("Model file not found.")
+
+load_model()
 
 
 # =========================================================
