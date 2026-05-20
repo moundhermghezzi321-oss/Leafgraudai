@@ -21,9 +21,17 @@ app = Flask(__name__)
 
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret_key_change_me")
 
-database_url = os.environ.get("DATABASE_URL", "sqlite:///leafguard.db")
+database_url = os.environ.get(
+    "DATABASE_URL",
+    "sqlite:////tmp/leafguard.db"
+)
+
 if database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+    database_url = database_url.replace(
+        "postgres://",
+        "postgresql://",
+        1
+    )
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
