@@ -1,6 +1,8 @@
-flask_sqlalchemy
-streamlit
 flask
+flask_sqlalchemy
+werkzeug
+gunicorn
+
 torch
 torchvision
 timm
