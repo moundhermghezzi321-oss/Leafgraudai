@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from uuid import uuid4
 
-from flask import Flask, request, redirect, url_for, session, flash, jsonify, render_template_string
+from flask import Flask, request, redirect, url_for, session, flash, jsonify, render_template_string 
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
