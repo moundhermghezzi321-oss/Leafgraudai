@@ -27,7 +27,10 @@ import gdown
 # FLASK APP
 # =========================================================
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder="."
+)
 
 app.secret_key = "leafguard_secret_key"
 
