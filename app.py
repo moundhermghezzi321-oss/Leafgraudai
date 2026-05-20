@@ -116,26 +116,11 @@ def load_model():
         except Exception as e:
             print("Model download failed:", e)
 
-  if os.path.exists(MODEL_PATH):
+    if os.path.exists(MODEL_PATH):
+        try:
+            model = torch.jit.load(MODEL_PATH, map_location="cpu")
+            model.eval()
 
-    try:
-
-        import timm
-
-        model = timm.create_model(
-            "efficientnet_b0",
-            pretrained=False,
-            num_classes=7
-        )
-
-        model.load_state_dict(
-            torch.load(
-                MODEL_PATH,
-                map_location="cpu"
-            )
-        )
-
-        model.eval()
             transform = transforms.Compose([
                 transforms.Resize((224, 224)),
                 transforms.ToTensor(),
@@ -144,14 +129,15 @@ def load_model():
                     std=[0.229, 0.224, 0.225]
                 )
             ])
+
             print("Model loaded successfully.")
+
         except Exception as e:
             print("Model loading failed:", e)
             model = None
+
     else:
         print("Model file not found. Running in demo mode.")
-
-load_model()
 
 
 # =========================================================
