@@ -382,25 +382,32 @@ def inject_globals():
 # =========================
 # ROUTES
 # =========================
+
 @app.route("/")
 def index():
+
     user = current_user()
+
     if not user:
         return redirect(url_for("login"))
 
     if user.role == "admin":
         return redirect(url_for("admin_dashboard"))
+
     if user.role == "expert":
         return redirect(url_for("expert_dashboard"))
+
     return redirect(url_for("farmer_dashboard"))
 
 
 @app.route("/set-language/<lang>")
 def set_language(lang):
+
     if lang not in TEXT:
         lang = "en"
 
     user = current_user()
+
     if user:
         user.language = lang
         db.session.commit()
@@ -408,40 +415,58 @@ def set_language(lang):
     return redirect(request.referrer or url_for("index"))
 
 
+# =========================================================
+# LOGIN
+# =========================================================
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "POST":
+
         email = request.form["email"].strip().lower()
         password = request.form["password"].strip()
 
         user = User.query.filter_by(email=email).first()
 
         if user and check_password_hash(user.password, password):
+
             if user.status != "active":
+
                 flash("Account blocked.")
                 return redirect(url_for("login"))
 
             session["user_id"] = user.id
+
             return redirect(url_for("index"))
 
         flash("Invalid email or password.")
+
         return redirect(url_for("login"))
 
-    return render_template("login.html")
+    return render_template("templates/login.html")
 
+
+# =========================================================
+# REGISTER
+# =========================================================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "POST":
+
         name = request.form["name"].strip()
         email = request.form["email"].strip().lower()
         password = request.form["password"].strip()
 
         if not name or not email or not password:
+
             flash("Please fill all fields.")
             return redirect(url_for("register"))
 
         if User.query.filter_by(email=email).first():
+
             flash("Email already exists.")
             return redirect(url_for("register"))
 
@@ -457,56 +482,106 @@ def register():
         db.session.commit()
 
         flash("Account created. Please login.")
+
         return redirect(url_for("login"))
 
-    return render_template("register.html")
+    return render_template("templates/register.html")
 
+
+# =========================================================
+# LOGOUT
+# =========================================================
 
 @app.route("/logout")
 def logout():
+
     session.clear()
+
     return redirect(url_for("login"))
 
 
+# =========================================================
+# FARMER DASHBOARD
+# =========================================================
+
 @app.route("/farmer")
 def farmer_dashboard():
+
     if not require_role("farmer"):
         return redirect(url_for("index"))
 
     user = current_user()
-    history = History.query.filter_by(farmer_id=user.id).order_by(History.id.desc()).all()
-    messages = ExpertMessage.query.filter_by(farmer_id=user.id).order_by(ExpertMessage.id.desc()).all()
 
-    return render_template("farmer.html", user=user, history=history, messages=messages)
+    history = History.query.filter_by(
+        farmer_id=user.id
+    ).order_by(
+        History.id.desc()
+    ).all()
 
+    messages = ExpertMessage.query.filter_by(
+        farmer_id=user.id
+    ).order_by(
+        ExpertMessage.id.desc()
+    ).all()
+
+    return render_template(
+        "templates/farmer.html",
+        user=user,
+        history=history,
+        messages=messages
+    )
+
+
+# =========================================================
+# EXPERT DASHBOARD
+# =========================================================
 
 @app.route("/expert")
 def expert_dashboard():
+
     if not require_role("expert"):
         return redirect(url_for("index"))
 
-    messages = ExpertMessage.query.order_by(ExpertMessage.id.desc()).all()
-    pending_count = ExpertMessage.query.filter_by(status="pending").count()
-    answered_count = ExpertMessage.query.filter_by(status="answered").count()
+    messages = ExpertMessage.query.order_by(
+        ExpertMessage.id.desc()
+    ).all()
+
+    pending_count = ExpertMessage.query.filter_by(
+        status="pending"
+    ).count()
+
+    answered_count = ExpertMessage.query.filter_by(
+        status="answered"
+    ).count()
 
     return render_template(
-        "expert.html",
+        "templates/expert.html",
         messages=messages,
         pending_count=pending_count,
         answered_count=answered_count
     )
 
 
+# =========================================================
+# ADMIN DASHBOARD
+# =========================================================
+
 @app.route("/admin")
 def admin_dashboard():
+
     if not require_role("admin"):
         return redirect(url_for("index"))
 
-    users = User.query.order_by(User.id.desc()).all()
-    histories = History.query.order_by(History.id.desc()).limit(10).all()
+    users = User.query.order_by(
+        User.id.desc()
+    ).all()
+
+    histories = History.query.order_by(
+        History.id.desc()
+    ).limit(10).all()
 
     return render_template(
-        "admin.html",
+        "templates/admin.html",
         users=users,
         histories=histories,
         total_users=User.query.count(),
@@ -514,173 +589,3 @@ def admin_dashboard():
         total_experts=User.query.filter_by(role="expert").count(),
         total_analyses=History.query.count()
     )
-
-
-@app.route("/admin/add-expert", methods=["POST"])
-def add_expert():
-    if not require_role("admin"):
-        return redirect(url_for("index"))
-
-    name = request.form["name"].strip()
-    email = request.form["email"].strip().lower()
-    password = request.form["password"].strip()
-
-    if User.query.filter_by(email=email).first():
-        flash("Email already exists.")
-        return redirect(url_for("admin_dashboard"))
-
-    expert = User(
-        name=name,
-        email=email,
-        password=generate_password_hash(password),
-        role="expert",
-        status="active"
-    )
-
-    db.session.add(expert)
-    db.session.commit()
-
-    flash("Expert added successfully.")
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/status/<int:user_id>/<status>")
-def change_status(user_id, status):
-    if not require_role("admin"):
-        return redirect(url_for("index"))
-
-    user = db.session.get(User, user_id)
-    if not user:
-        return redirect(url_for("admin_dashboard"))
-
-    if user.role == "admin":
-        flash("Admin cannot be blocked.")
-        return redirect(url_for("admin_dashboard"))
-
-    if status in ["active", "blocked"]:
-        user.status = status
-        db.session.commit()
-
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/admin/promote/<int:user_id>/<role>")
-def promote_user(user_id, role):
-    if not require_role("admin"):
-        return redirect(url_for("index"))
-
-    if role not in ["farmer", "expert"]:
-        return redirect(url_for("admin_dashboard"))
-
-    user = db.session.get(User, user_id)
-    if user and user.role != "admin":
-        user.role = role
-        db.session.commit()
-
-    return redirect(url_for("admin_dashboard"))
-
-
-@app.route("/predict", methods=["POST"])
-def predict():
-    if not require_role("farmer"):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    if "image" not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-
-    user = current_user()
-    file = request.files["image"]
-
-    if file.filename == "":
-        return jsonify({"error": "Empty file"}), 400
-
-    relative_path, full_path = save_uploaded_image(file)
-
-    try:
-        with open(full_path, "rb") as img_file:
-            disease, confidence, info = run_prediction(img_file)
-
-        history = History(
-            farmer_id=user.id,
-            image_path=relative_path,
-            disease=disease,
-            confidence=confidence,
-            details=info["details"],
-            advice=info["advice"],
-            treatment=info["treatment"]
-        )
-
-        db.session.add(history)
-        db.session.commit()
-
-        return jsonify({
-            "history_id": history.id,
-            "image_path": url_for("static", filename=relative_path),
-            "disease": disease,
-            "confidence": confidence,
-            "details": info["details"],
-            "advice": info["advice"],
-            "treatment": info["treatment"]
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/send-message", methods=["POST"])
-def send_message():
-    if not require_role("farmer"):
-        return jsonify({"success": False}), 401
-
-    user = current_user()
-    disease = request.form.get("disease", "").strip()
-    message = request.form.get("message", "").strip()
-    history_id = request.form.get("history_id")
-
-    if not disease or not message:
-        return jsonify({"success": False, "error": "Missing data"}), 400
-
-    image_path = None
-    history = None
-
-    if history_id:
-        history = db.session.get(History, int(history_id))
-        if history and history.farmer_id == user.id:
-            image_path = history.image_path
-
-    msg = ExpertMessage(
-        farmer_id=user.id,
-        history_id=history.id if history else None,
-        disease=disease,
-        image_path=image_path,
-        message=message
-    )
-
-    db.session.add(msg)
-    db.session.commit()
-
-    return jsonify({"success": True})
-
-
-@app.route("/expert/reply/<int:message_id>", methods=["POST"])
-def expert_reply(message_id):
-    if not require_role("expert"):
-        return redirect(url_for("index"))
-
-    expert = current_user()
-    msg = db.session.get(ExpertMessage, message_id)
-
-    if not msg:
-        return redirect(url_for("expert_dashboard"))
-
-    msg.reply = request.form["reply"].strip()
-    msg.expert_id = expert.id
-    msg.status = "answered"
-    msg.replied_at = datetime.utcnow()
-
-    db.session.commit()
-
-    flash("Reply sent.")
-    return redirect(url_for("expert_dashboard"))
-
-
