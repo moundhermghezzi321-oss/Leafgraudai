@@ -95,8 +95,8 @@ LABELS = list(DISEASE_INFO.keys())
 # MODEL DOWNLOAD AND LOADING
 # =========================================================
 
-MODEL_PATH = "efficientnetb0_mobile.pt"
-GOOGLE_DRIVE_FILE_ID = "1eYl2lQm8z-b1pP0ykQo7QptjGNvZjepz"
+MODEL_PATH = "vitt.pt"
+GOOGLE_DRIVE_FILE_ID = "1wjZXCNyiHg8864ZsKcntGulNWcDcHH_G"
 
 model = None
 transform = None
